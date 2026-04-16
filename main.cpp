@@ -1,6 +1,11 @@
 #include <iostream>
 #include <vector>
-#include <cstdlib>
+#include <stack>
+#include <utility>
+
+// # -> wall
+// ' ' -> empty space
+// $ -> player
 
 typedef enum Difficulty {
 	EASY = 1,
@@ -9,22 +14,48 @@ typedef enum Difficulty {
 	CUSTOM
 } Difficulty;
 
-void generateMaze(int width, int height) {
+
+std::vector<std::vector<char>> generateMaze(int width, int height) {
+
+	// maze as 2d vector
+	std::vector<std::vector<char>> maze(height, std::vector<char>(width, '#'));
+
+	// stack for randomized dfs
+	// holds x,y coordinates
+	std::stack<std::pair<int, int>> stack;
+
+
+	return maze;
 
 }
 
-void printMaze(int mapSize) {
+void printMaze(std::vector<std::vector<char>> maze) {
+
+	// clear screen
+	std::cout << "\033[H";
+
+	// print top borders
+	std::cout << std::string(maze[0].size() + 2, '@');
+	std::cout << '\n';
 	
-		std::cout << std::string(mapSize+2, '@');
-		std::cout << '\n';
-		for(int i = 0; i < mapSize; i++) {
-			std::cout << '@';
-			std::cout << std::string(mapSize, ' ');
-			std::cout << '@';
-			std::cout << '\n';
+	// print maze
+	for(int i = 0; i < maze.size(); i++) {
+
+		// print left borders
+		std::cout << '@';
+		
+		for(int j = 0; j < maze[0].size(); j++) {
+			std::cout << maze[i][j];
 		}
-		std::cout << std::string(mapSize+2, '@');
+
+		// print right borders
+		std::cout << '@';
 		std::cout << '\n';
+	}
+
+	// print bottom borders
+	std::cout << std::string(maze[0].size() + 2, '@');
+	std::cout << '\n';
 }
 
 bool isGameWon() {
@@ -43,17 +74,18 @@ int main() {
 	std::cin >> diffSelection;
 	difficulty = static_cast<Difficulty>(diffSelection);
 
+
 	switch (difficulty) {
 
-    case EASY:
-		generateMaze(20, 20);
+		case EASY:
+			generateMaze(21, 21);
 
-    case NORMAL:
-		generateMaze(30, 30);
+		case NORMAL:
+			generateMaze(31, 31);
 		
-    case HARD:
-		generateMaze(40, 40);
+		case HARD:
+			generateMaze(41, 41);
 
 	}
-	system("clear");
+
 }
