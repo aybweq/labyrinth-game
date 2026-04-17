@@ -2,6 +2,8 @@
 #include <vector>
 #include <stack>
 #include <utility>
+#include <random>
+#include <algorithm>
 
 // # -> wall
 // ' ' -> empty space
@@ -14,6 +16,18 @@ typedef enum Difficulty {
 	CUSTOM
 } Difficulty;
 
+bool isAvailable(int width, int height, int nx, int ny, std::vector<std::vector<bool>> visited) {
+
+	if(nx >= 0 && nx < width && ny >= 0 && ny < height) {
+		if(visited[nx][ny] == false) {
+			return true;
+		}
+	}
+
+	return false
+
+}
+
 
 std::vector<std::vector<char>> generateMaze(int width, int height) {
 
@@ -25,6 +39,61 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 	std::stack<std::pair<int, int>> stack;
 
 
+	std::vector<std::pair<int, int>> Directions {
+		{0, 1}, 	// right
+		{0, -1}, 	// left
+		{1, 0},	 // down
+		{-1, 0} 	// up
+	};
+
+	// generating random number
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::shuffle(Directions.begin(), Directions.end(), gen);
+
+
+	// starting point
+	maze[0][0] = ' ';
+	stack.push({0, 0});
+
+	// tracking visited cells
+	std::vector<std::vector<bool>> visited {height, std::vector<bool>(width, false)};
+	visited[0][0] = true;
+
+	std::pair<int, int> randomDir;
+
+
+	while(!stack.empty()) {
+
+		// current coordinates
+		int cx {stack.top().first};
+		int cy {stack.top().second};
+
+		// a random direction selected
+		randomDir = Directions[generator(gen)];
+
+		// next coordinates
+		int nx {cx + randomDir.first * 2};
+		int ny {cy + randomDir.second * 2};
+
+
+		while(!isAvailable(width, height, nx, ny, visited)) {
+			randomDir = Directions[generator(gen)];
+			int nx {cx + randomDir.first * 2};
+			int ny {cy + randomDir.second * 2};
+		}
+
+		// opening the way
+		int mx = (cx + nx)/2;
+		int my = (cy + ny)/2;
+		maze[mx][my] = ' ';
+		maze[nx][ny] = ' ';
+
+
+		stack.push({nx, ny});
+
+	}
+	
 	return maze;
 
 }
@@ -68,11 +137,13 @@ int main() {
 	int diffSelection;
 
 	std::cout << "Difficulty\n";
-	std::cout << "1- 20x20\t 150seconds\n";
-	std::cout << "2- 30x30\t 120seconds\n";
-	std::cout << "3- 40x40\t 90seconds\n";
+	std::cout << "1- 21x21\t 150seconds\n";
+	std::cout << "2- 31x31\t 120seconds\n";
+	std::cout << "3- 41x41\t 90seconds\n";
+
 	std::cin >> diffSelection;
 	difficulty = static_cast<Difficulty>(diffSelection);
+
 
 
 	switch (difficulty) {
@@ -85,6 +156,10 @@ int main() {
 		
 		case HARD:
 			generateMaze(41, 41);
+
+	}
+
+	while(!isGameWon) {
 
 	}
 
