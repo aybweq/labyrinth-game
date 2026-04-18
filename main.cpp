@@ -20,8 +20,7 @@ bool isCellAvailable(int width, int height, int nx, int ny, const std::vector<st
 
 }
 
-
-std::vector<std::vector<char>> generateMaze(int width, int height) {
+std::vector<std::vector<char>> generateMaze(int width, int height, std::pair<int, int> playerPos) {
 
 	// maze as 2d vector
 	std::vector<std::vector<char>> maze(height, std::vector<char>(width, '#'));
@@ -44,12 +43,12 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 
 
 	// starting point
-	maze[0][0] = ' ';
-	stack.push({0, 0});
+	maze[playerPos.first][playerPos.second] = ' ';
+	stack.push({playerPos.first, playerPos.second});
 
 	// tracking visited cells
 	std::vector<std::vector<bool>> visited (height, std::vector<bool>(width, false));
-	visited[0][0] = true;
+	visited[playerPos.second][playerPos.first] = true;
 
 
 	while(!stack.empty()) {
@@ -93,6 +92,8 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 		}
 
 	}
+
+	maze[playerPos.second][playerPos.first] = 'P';
 	
 	return maze;
 
@@ -101,6 +102,7 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 void printMaze(const std::vector<std::vector<char>>& maze, int time_left) {
 
 	const std::string RED = "\033[1;31m";
+	const std::string GREEN = "\033[1;32m";
 	const std::string RESET = "\033[0m";
 
 	// clear screen
@@ -141,32 +143,64 @@ void printMaze(const std::vector<std::vector<char>>& maze, int time_left) {
 }
 
 bool targetPointReached(const std::vector<std::vector<char>>& maze) {
-	if(maze[maze.size() - 1][maze[0].size() - 1] == '$') return true;
+	if(maze[maze.size() - 1][maze[0].size() - 1] == 'P') return true;
 
 	return false;
 }
 
-bool canPlayerMove(const std::vector<std::vector<char>>& maze, std::pair<int, int> playerPos, char movement) {
-	return false;
+void movePlayer(std::vector<std::vector<char>>& maze, std::pair<int, int>& playerPos, int movement, int width, int height) {
+
+	std::vector<std::pair<int, int>> Directions {
+		{1, 0}, 	// right
+		{-1, 0}, 	// left
+		{0, 1},	 // down
+		{0, -1} 	// up
+	};
+
+	// wanted direction
+	int movementX = Directions[movement].second;
+	int movementY = Directions[movement].first;
+
+	// wanted cell
+	int xToGo = playerPos.first + movementX;
+	int yToGo = playerPos.second + movementY;
+
+	// if cell is not out of bounds and not a wall, move player
+	if(xToGo >= 0 && xToGo < width && yToGo >= 0 && yToGo < height) {
+
+		if(maze[yToGo][xToGo] != '#') {
+
+			// movement
+			maze[yToGo][xToGo] = 'P';
+			maze[playerPos.second][playerPos.first] = ' ';
+
+			// update playerPos
+			playerPos.first = yToGo;
+			playerPos.second = xToGo;
+		}
+	}
 }
 
 int main() {
 
-	// oyuncu konumunu tut
 	// yon tuslari ata
-	// canPlayerMove yaz
 	// mumkunse oyuncuyu hareket ettir
 
-	int time_limit = 60;
+	int time_limit = 5;
 
-	const int ticks_per_second = 60;
+	const int ticks_per_second = 24;
 	const std::chrono::nanoseconds skip_ticks(1000000000 / ticks_per_second);
 
 	std::chrono::steady_clock::time_point next_tick = std::chrono::steady_clock::now();
 	auto start_time = next_tick;
 
+	int width = 61;
+	int height = 31;
 
-	auto maze = generateMaze(61, 31);
+	// playerPos is: (y, x)
+	std::pair<int, int> playerPos {0, 0};
+	auto maze = generateMaze(width, height, playerPos);
+	// maze size must be odd numbers or it will crash
 
 
 	while(!targetPointReached(maze)) {
@@ -176,6 +210,7 @@ int main() {
 
 		int seconds_past = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
 		int time_left = time_limit - seconds_past;
+
 
 		printMaze(maze, time_left);
 
@@ -187,9 +222,11 @@ int main() {
 		// waiting until end of the tick
 		next_tick += skip_ticks;
 		std::this_thread::sleep_until(next_tick);
+
+		movePlayer(maze, playerPos, 0, width, height);
 	}
 
-	if(targetPointReached) std::cout << "You won!\n";
+	if(targetPointReached(maze)) std::cout << "You won!\n";
 	else std::cout << "You lost!\n";
 
 }
