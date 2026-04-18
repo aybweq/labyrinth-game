@@ -49,12 +49,6 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 	std::vector<std::vector<bool>> visited (height, std::vector<bool>(width, false));
 	visited[0][0] = true;
 
-	std::pair<int, int> randomDir;
-
-
-	// shuffle olayini duzelt
-	// stack push ve pop olayini hallet
-	// hangi cell'ler yola cevrilecek?
 
 	while(!stack.empty()) {
 
@@ -105,7 +99,7 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 void printMaze(std::vector<std::vector<char>> maze) {
 
 	// clear screen
-	std::cout << "\033[H";
+	std::cout << "\033[2J\033[H";
 
 	// print top borders
 	std::cout << std::string(maze[0].size() + 2, '@');
@@ -137,7 +131,7 @@ bool isGameWon() {
 
 int main() {
 
-	auto maze = generateMaze(21, 21);
+	auto maze = generateMaze(41, 41);
 	printMaze(maze);
 
 }
