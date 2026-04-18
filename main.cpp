@@ -4,9 +4,11 @@
 #include <utility>
 #include <random>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 
-bool isAvailable(int width, int height, int nx, int ny, const std::vector<std::vector<bool>>& visited) {
+bool isCellAvailable(int width, int height, int nx, int ny, const std::vector<std::vector<bool>>& visited) {
 
 	if(nx >= 0 && nx < width && ny >= 0 && ny < height) {
 		if(visited[ny][nx] == false) {
@@ -67,7 +69,7 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 			int nx {cx + dir.first * 2};
 			int ny {cy + dir.second * 2};
 
-			if(isAvailable(width, height, nx, ny, visited)) {
+			if(isCellAvailable(width, height, nx, ny, visited)) {
 
 				// middle cell
 				int mx {(cx + nx)/2};
@@ -96,7 +98,7 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 
 }
 
-void printMaze(std::vector<std::vector<char>> maze) {
+void printMaze(const std::vector<std::vector<char>>& maze, int time_left) {
 
 	// clear screen
 	std::cout << "\033[2J\033[H";
@@ -123,15 +125,63 @@ void printMaze(std::vector<std::vector<char>> maze) {
 	// print bottom borders
 	std::cout << std::string(maze[0].size() + 2, '@');
 	std::cout << '\n';
+
+	// go to time column
+	int timeColumn = maze[0].size() + 7; 
+	std::cout << "\033[1;" << timeColumn << "H";
+
+	//print time left
+	std::cout << "TIME LEFT: " << time_left;
+
+	// idk
+	std::cout << "\033[" << maze.size() + 4 << ";1H" << std::flush;
 }
 
-bool isGameWon() {
+bool targetPointReached(std::vector<std::vector<char>>& maze) {
+	if(maze[maze.size() - 1][maze[0].size() - 1] == '$') return true;
+
+	return false;
+}
+
+bool canPlayerMove(const std::vector<std::vector<char>>& maze) {
 	return false;
 }
 
 int main() {
 
-	auto maze = generateMaze(41, 41);
-	printMaze(maze);
+	int time_limit = 60;
+
+	const int ticks_per_second = 60;
+	const std::chrono::nanoseconds skip_ticks(1000000000 / ticks_per_second);
+
+	std::chrono::steady_clock::time_point next_tick = std::chrono::steady_clock::now();
+	auto start_time = next_tick;
+
+
+	auto maze = generateMaze(61, 31);
+
+
+	while(!targetPointReached(maze)) {
+
+		std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();
+		auto elapsed = current_time - start_time;
+
+		int seconds_past = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+		int time_left = time_limit - seconds_past;
+
+		printMaze(maze, time_left);
+
+		if(time_left < 0) {
+			break;
+		}
+
+
+		// waiting until end of the tick
+		next_tick += skip_ticks;
+		std::this_thread::sleep_until(next_tick);
+	}
+
+	if(targetPointReached) std::cout << "You won!\n";
+	else std::cout << "You lost!\n";
 
 }
