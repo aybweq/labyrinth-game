@@ -100,30 +100,33 @@ std::vector<std::vector<char>> generateMaze(int width, int height) {
 
 void printMaze(const std::vector<std::vector<char>>& maze, int time_left) {
 
+	const std::string RED = "\033[1;31m";
+	const std::string RESET = "\033[0m";
+
 	// clear screen
 	std::cout << "\033[2J\033[H";
 
 	// print top borders
-	std::cout << std::string(maze[0].size() + 2, '@');
+	std::cout << RED << std::string(maze[0].size() + 2, '@') << RESET;
 	std::cout << '\n';
 	
 	// print maze
 	for(int i = 0; i < maze.size(); i++) {
 
 		// print left borders
-		std::cout << '@';
+		std::cout << RED << '@' << RESET;
 		
 		for(int j = 0; j < maze[0].size(); j++) {
 			std::cout << maze[i][j];
 		}
 
 		// print right borders
-		std::cout << '@';
+		std::cout << RED << '@' << RESET;
 		std::cout << '\n';
 	}
 
 	// print bottom borders
-	std::cout << std::string(maze[0].size() + 2, '@');
+	std::cout << RED << std::string(maze[0].size() + 2, '@') << RESET;
 	std::cout << '\n';
 
 	// go to time column
@@ -137,17 +140,22 @@ void printMaze(const std::vector<std::vector<char>>& maze, int time_left) {
 	std::cout << "\033[" << maze.size() + 4 << ";1H" << std::flush;
 }
 
-bool targetPointReached(std::vector<std::vector<char>>& maze) {
+bool targetPointReached(const std::vector<std::vector<char>>& maze) {
 	if(maze[maze.size() - 1][maze[0].size() - 1] == '$') return true;
 
 	return false;
 }
 
-bool canPlayerMove(const std::vector<std::vector<char>>& maze) {
+bool canPlayerMove(const std::vector<std::vector<char>>& maze, std::pair<int, int> playerPos, char movement) {
 	return false;
 }
 
 int main() {
+
+	// oyuncu konumunu tut
+	// yon tuslari ata
+	// canPlayerMove yaz
+	// mumkunse oyuncuyu hareket ettir
 
 	int time_limit = 60;
 
