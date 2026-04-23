@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include "rlutil.h"
 
 
 bool isCellAvailable(int width, int height, int nx, int ny, const std::vector<std::vector<bool>>& visited) {
@@ -43,7 +44,7 @@ std::vector<std::vector<char>> generateMaze(int width, int height, std::pair<int
 
 
 	// starting point
-	maze[playerPos.first][playerPos.second] = ' ';
+	maze[playerPos.second][playerPos.first] = ' ';
 	stack.push({playerPos.first, playerPos.second});
 
 	// tracking visited cells
@@ -94,6 +95,7 @@ std::vector<std::vector<char>> generateMaze(int width, int height, std::pair<int
 	}
 
 	maze[playerPos.second][playerPos.first] = 'P';
+	maze[maze.size()-1][maze[0].size()-1] = 'E';
 	
 	return maze;
 
@@ -157,9 +159,33 @@ void movePlayer(std::vector<std::vector<char>>& maze, std::pair<int, int>& playe
 		{0, -1} 	// up
 	};
 
+	std::pair<int, int> direction {0, 0};
+
+	switch (movement) {
+		case 'd':
+			direction = Directions[0];
+			break;
+
+		case 's':
+			direction = Directions[2];
+			break;
+
+		case 'w':
+			direction = Directions[3];
+			break;
+		
+		case 'a':
+			direction = Directions[1];
+			break;
+
+		default:
+			return;
+
+	}
+
 	// wanted direction
-	int movementX = Directions[movement].second;
-	int movementY = Directions[movement].first;
+	int movementX = direction.first;
+	int movementY = direction.second;
 
 	// wanted cell
 	int xToGo = playerPos.first + movementX;
@@ -175,8 +201,8 @@ void movePlayer(std::vector<std::vector<char>>& maze, std::pair<int, int>& playe
 			maze[playerPos.second][playerPos.first] = ' ';
 
 			// update playerPos
-			playerPos.first = yToGo;
-			playerPos.second = xToGo;
+			playerPos.first = xToGo;
+			playerPos.second = yToGo;
 		}
 	}
 }
@@ -186,7 +212,8 @@ int main() {
 	// yon tuslari ata
 	// mumkunse oyuncuyu hareket ettir
 
-	int time_limit = 5;
+	// seconds
+	int time_limit = 30;
 
 	const int ticks_per_second = 24;
 	const std::chrono::nanoseconds skip_ticks(1000000000 / ticks_per_second);
@@ -194,13 +221,15 @@ int main() {
 	std::chrono::steady_clock::time_point next_tick = std::chrono::steady_clock::now();
 	auto start_time = next_tick;
 
-	int width = 61;
-	int height = 31;
+	// maze size must be odd numbers or game will crash
+	int width = 21;
+	int height = 11;
 
-	// playerPos is: (y, x)
+	// playerPos is: (x, y)
+	// this is starting pos, later updates
+	// again must start at even numbers or will crash
 	std::pair<int, int> playerPos {0, 0};
 	auto maze = generateMaze(width, height, playerPos);
-	// maze size must be odd numbers or it will crash
 
 
 	while(!targetPointReached(maze)) {
@@ -218,12 +247,22 @@ int main() {
 			break;
 		}
 
+		if(kbhit()) {
+			int k = rlutil::getkey();
+
+			if(k == 'q' || k == rlutil::KEY_ESCAPE) {
+				std::cout << "Game terminated.\n";
+				return 0;
+			}
+
+			movePlayer(maze, playerPos, k, width, height);
+		}
+
 
 		// waiting until end of the tick
 		next_tick += skip_ticks;
 		std::this_thread::sleep_until(next_tick);
 
-		movePlayer(maze, playerPos, 0, width, height);
 	}
 
 	if(targetPointReached(maze)) std::cout << "You won!\n";
